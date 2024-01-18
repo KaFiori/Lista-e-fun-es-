@@ -1,0 +1,53 @@
+class Elevador:
+    def __init__(self, total_capacidade, total_andares):
+        self.total_capacidade = total_capacidade
+        self.atual_capacidade = 0
+        self.total_andares = total_andares
+        self.atual_andar = 1
+
+    def subir(self):
+        if self.atual_andar < self.total_andares:
+            self.atual_andar += 1
+            return "Subindo"
+        else:
+            return "VOCÊ ESTÁ NO ANDAR MAIS ALTO!"
+
+    def descer(self):
+        if self.atual_andar > 1:
+            self.atual_andar -= 1
+            return "Descendo"
+        else:
+            return "VOCÊ JÁ ESTÁ NO TÉRREO!"
+
+    def entrar(self):
+        if self.atual_capacidade < self.total_capacidade:
+            self.atual_capacidade += 1
+            return "Entrando uma pessoa"
+        else:
+            return "O ELEVADOR ESTÁ CHEIO!"
+
+    def sair(self):
+        if self.atual_capacidade > 0:
+            self.atual_capacidade -= 1
+            return "Saindo uma pessoa"
+        else:
+            return "NÃO TEM NINGUÉM"
+
+elevador = Elevador(10, 5)
+
+print(elevador.subir())  # Saída: Subindo
+print(elevador.subir())  # Saída: Subindo
+print(elevador.subir())  # Saída: VOCÊ ESTÁ NO ANDAR MAIS ALTO!
+
+print(elevador.entrar())  # Saída: Entrando uma pessoa
+print(elevador.entrar())  # Saída: Entrando uma pessoa
+print(elevador.entrar())  # Saída: O ELEVADOR ESTÁ CHEIO!
+
+print(elevador.sair())  # Saída: Saindo uma pessoa
+print(elevador.sair())  # Saída: Saindo uma pessoa
+print(elevador.sair())  # Saída: NÃO TEM NINGUÉM
+
+print(elevador.descer())  # Saída: Descendo
+print(elevador.descer())  # Saída: Descendo
+print(elevador.descer())  # Saída: VOCÊ JÁ ESTÁ NO TÉRREO!
+
