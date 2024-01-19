@@ -1,0 +1,244 @@
+##projeto em fase de estruturação com Tkinter. Sem ainda vincular a banco de dados. 
+
+import tkinter as tk
+from tkinter import messagebox
+
+class Livro:
+    def __init__(self, livro_id, titulo, autor):
+        self.livro_id = livro_id
+        self.titulo = titulo
+        self.autor = autor
+        self.status_emprestimo = "Disponível"
+
+    def emprestar(self):
+        if self.status_emprestimo == "Disponível":
+            self.status_emprestimo = "Emprestado"
+            return True
+        else:
+            return False
+
+    def devolver(self):
+        if self.status_emprestimo == "Emprestado":
+            self.status_emprestimo = "Disponível"
+            return True
+        else:
+            return False
+
+    def __str__(self):
+        return f"{self.titulo} - {self.autor} (ID: {self.livro_id}, Status: {self.status_emprestimo})"
+
+
+class Membro:
+    def __init__(self, membro_id, nome):
+        self.membro_id = membro_id
+        self.nome = nome
+        self.historico_emprestimos = []
+
+    def emprestar_livro(self, livro):
+        if livro.emprestar():
+            self.historico_emprestimos.append(livro)
+            return True
+        else:
+            return False
+
+    def devolver_livro(self, livro):
+        if livro in self.historico_emprestimos:
+            livro.devolver()
+            self.historico_emprestimos.remove(livro)
+            return True
+        else:
+            return False
+
+    def historico_emprestimos(self):
+        return [livro.titulo for livro in self.historico_emprestimos]
+
+    def __str__(self):
+        return f"{self.nome} (ID: {self.membro_id})"
+
+
+class Biblioteca:
+    def __init__(self):
+        self.catalogo_livros = []
+        self.registro_membros = []
+
+    def adicionar_livro(self, livro):
+        self.catalogo_livros.append(livro)
+
+    def adicionar_membro(self, membro):
+        self.registro_membros.append(membro)
+
+    def emprestar_livro(self, membro_id, livro_id):
+        membro = next((m for m in self.registro_membros if m.membro_id == membro_id), None)
+        livro = next((livro for livro in self.catalogo_livros if livro.livro_id == livro_id), None)
+
+        if membro and livro:
+            return membro.emprestar_livro(livro)
+        else:
+            return False
+
+    def devolver_livro(self, membro_id, livro_id):
+        membro = next((m for m in self.registro_membros if m.membro_id == membro_id), None)
+        livro = next((livro for livro in self.catalogo_livros if livro.livro_id == livro_id), None)
+
+        if membro and livro:
+            return membro.devolver_livro(livro)
+        else:
+            return False
+
+    def pesquisar_livro(self, termo_pesquisa):
+        termo_pesquisa_lower = termo_pesquisa.lower()
+        return [livro for livro in self.catalogo_livros if
+                termo_pesquisa_lower in livro.titulo.lower() or termo_pesquisa_lower in livro.autor.lower()]
+
+    def listar_catalogo(self):
+        return [str(livro) for livro in self.catalogo_livros]
+
+    def listar_membros(self):
+        return [str(membro) for membro in self.registro_membros]
+
+
+class AplicacaoBiblioteca:
+    def __init__(self, master):
+        self.master = master
+        master.title("Biblioteca")
+
+        self.biblioteca = Biblioteca()
+
+        self.menu_principal()
+
+    def menu_principal(self):
+        self.limpar_tela()
+
+        tk.Label(self.master, text="*** Menu Principal ***").grid(row=0, column=0, columnspan=2)
+
+        opcoes = [
+            ("Adicionar Livro", self.adicionar_livro),
+            ("Adicionar Membro", self.adicionar_membro),
+            ("Emprestar Livro", self.emprestar_livro),
+            ("Devolver Livro", self.devolver_livro),
+            ("Pesquisar Livro", self.pesquisar_livro),
+            ("Listar Catálogo", self.listar_catalogo),
+            ("Listar Membros", self.listar_membros),
+            ("Sair", self.sair_programa)
+        ]
+
+        for i, (texto, comando) in enumerate(opcoes, start=1):
+            tk.Button(self.master, text=texto, command=comando).grid(row=i, column=0, columnspan=2, pady=5)
+
+    def limpar_tela(self):
+        for widget in self.master.winfo_children():
+            widget.destroy()
+
+    def adicionar_livro(self):
+        self.limpar_tela()
+
+        tk.Label(self.master, text="Digite o título do livro:").grid(row=0, column=0)
+        titulo_entry = tk.Entry(self.master)
+        titulo_entry.grid(row=0, column=1)
+
+        tk.Label(self.master, text="Digite o autor do livro:").grid(row=1, column=0)
+        autor_entry = tk.Entry(self.master)
+        autor_entry.grid(row=1, column=1)
+
+        adicionar_button = tk.Button(self.master, text="Adicionar Livro",
+                                     command=lambda: self.executar_adicionar_livro(titulo_entry.get(), autor_entry.get()))
+        adicionar_button.grid(row=2, column=0, columnspan=2, pady=10)
+
+    def executar_adicionar_livro(self, titulo, autor):
+        livro_id = len(self.biblioteca.catalogo_livros) + 1
+        novo_livro = Livro(livro_id, titulo, autor)
+        self.biblioteca.adicionar_livro(novo_livro)
+        messagebox.showinfo("Sucesso", "Livro adicionado com sucesso!")
+        self.menu_principal()
+
+    def adicionar_membro(self):
+        self.limpar_tela()
+
+        tk.Label(self.master, text="Digite o nome do membro:").grid(row=0, column=0)
+        nome_entry = tk.Entry(self.master)
+        nome_entry.grid(row=0, column=1)
+
+        adicionar_button = tk.Button(self.master, text="Adicionar Membro",
+                                     command=lambda: self.executar_adicionar_membro(nome_entry.get()))
+        adicionar_button.grid(row=1, column=0, columnspan=2, pady=10)
+
+    def executar_adicionar_membro(self, nome):
+        membro_id = len(self.biblioteca.registro_membros) + 1
+        novo_membro = Membro(membro_id, nome)
+        self.biblioteca.adicionar_membro(novo_membro)
+        messagebox.showinfo("Sucesso", "Membro adicionado com sucesso!")
+        self.menu_principal()
+
+    def emprestar_livro(self):
+        # Implemente a lógica semelhante à função adicionar_livro para devolver livros
+
+        self.limpar_tela()
+
+        tk.Label(self.master, text="Digite o nome do livro:").grid(row=0, column=0)
+        nome_entry = tk.Entry(self.master)
+        nome_entry.grid(row=0, column=1)
+
+        adicionar_button = tk.Button(self.master, text="Empréstimo do livro",
+                                     command=lambda: self.executar_adicionar_membro(nome_entry.get()))
+        adicionar_button.grid(row=1, column=0, columnspan=2, pady=10)
+        pass
+
+    def devolver_livro(self):
+        # Implemente a lógica semelhante à função adicionar_livro para devolver livros
+        self.limpar_tela()
+
+        tk.Label(self.master, text="Digite o nome do livro:").grid(row=0, column=0)
+        nome_entry = tk.Entry(self.master)
+        nome_entry.grid(row=0, column=1)
+
+        adicionar_button = tk.Button(self.master, text="Devolver livro",
+                                     command=lambda: self.executar_adicionar_membro(nome_entry.get()))
+        adicionar_button.grid(row=1, column=0, columnspan=2, pady=10)
+        pass
+
+    def pesquisar_livro(self):
+        # Implemente a lógica semelhante à função adicionar_livro para pesquisar livros
+        self.limpar_tela()
+
+        tk.Label(self.master, text="Digite o nome do livro:").grid(row=0, column=0)
+        nome_entry = tk.Entry(self.master)
+        nome_entry.grid(row=0, column=1)
+
+        adicionar_button = tk.Button(self.master, text="Pesquisar livro",
+                                     command=lambda: self.executar_adicionar_membro(nome_entry.get()))
+        adicionar_button.grid(row=1, column=0, columnspan=2, pady=10)
+        pass
+
+    def listar_catalogo(self):
+        # Implemente a lógica semelhante à função adicionar_livro para listar o catálogo
+        self.limpar_tela()
+
+        tk.Label(self.master, text="Digite o nome do livro:").grid(row=0, column=0)
+        nome_entry = tk.Entry(self.master)
+        nome_entry.grid(row=0, column=1)
+
+        adicionar_button = tk.Button(self.master, text="Listar Catálogo",
+                                     command=lambda: self.executar_adicionar_membro(nome_entry.get()))
+        adicionar_button.grid(row=1, column=0, columnspan=2, pady=10)
+        pass
+
+    def listar_membros(self):
+        # Implemente a lógica semelhante à função adicionar_livro para listar membros
+        self.limpar_tela()
+
+        tk.Label(self.master, text="Digite o nome do Membro:").grid(row=0, column=0)
+        nome_entry = tk.Entry(self.master)
+        nome_entry.grid(row=0, column=1)
+
+        adicionar_button = tk.Button(self.master, text="Listar Membro",
+                                     command=lambda: self.executar_adicionar_membro(nome_entry.get()))
+        adicionar_button.grid(row=1, column=0, columnspan=2, pady=10)
+        pass
+
+    def sair_programa(self):
+        self.master.destroy()
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = AplicacaoBiblioteca(root)
+    root.mainloop()
