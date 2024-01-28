@@ -1,0 +1,129 @@
+##Arquivo de nome: Main.py
+
+from task_manager import TaskManager
+
+def main():
+    manager = TaskManager()
+
+    while True:
+        print("\n===== GERENCIADOR DE TAREFAS DIÁRIAS =====")
+        print("1. Adicionar Tarefa")
+        print("2. Listar Tarefas")
+        print("3. Marcar como Concluída")
+        print("4. Visualizar por Prioridade")
+        print("5. Visualizar por Categoria")
+        print("0. Sair")
+
+        choice = input("Escolha uma opção: ")
+
+        if choice == '1':
+            manager.add_task()
+        elif choice == '2':
+            manager.list_tasks()
+        elif choice == '3':
+            manager.mark_as_done()
+        elif choice == '4':
+            manager.view_by_priority()
+        elif choice == '5':
+            manager.view_by_category()
+        elif choice == '0':
+            print("Encerrando o programa.")
+            break
+        else:
+            print("Opção inválida. Tente novamente.")
+
+if __name__ == "__main__":
+    main()
+
+##Arquivo de nome task_manager
+
+import sqlite3
+
+class TaskManager:
+    def __init__(self):
+        self.conn = sqlite3.connect('tasks.db')
+        self.create_table()
+
+    def create_table(self):
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                description TEXT,
+                priority INTEGER,
+                category TEXT,
+                done BOOLEAN
+            )
+        ''')
+        self.conn.commit()
+
+    def add_task(self):
+        name = input("Nome da tarefa: ")
+        description = input("Descrição da tarefa: ")
+        priority = int(input("Prioridade (1 - Baixa, 2 - Média, 3 - Alta): "))
+        category = input("Categoria da tarefa: ")
+
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            INSERT INTO tasks (name, description, priority, category, done)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (name, description, priority, category, False))
+
+        self.conn.commit()
+        print("Tarefa adicionada com sucesso!")
+
+    def list_tasks(self):
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            SELECT * FROM tasks
+        ''')
+
+        tasks = cursor.fetchall()
+
+        if not tasks:
+            print("Nenhuma tarefa encontrada.")
+        else:
+            for task in tasks:
+                print(task)
+
+    def mark_as_done(self):
+        task_id = int(input("Digite o ID da tarefa concluída: "))
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            UPDATE tasks SET done = 1 WHERE id = ?
+        ''', (task_id,))
+
+        self.conn.commit()
+        print("Tarefa marcada como concluída.")
+
+    def view_by_priority(self):
+        priority = int(input("Visualizar tarefas com prioridade (1 - Baixa, 2 - Média, 3 - Alta): "))
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            SELECT * FROM tasks WHERE priority = ?
+        ''', (priority,))
+
+        tasks = cursor.fetchall()
+
+        if not tasks:
+            print("Nenhuma tarefa encontrada com essa prioridade.")
+        else:
+            for task in tasks:
+                print(task)
+
+    def view_by_category(self):
+        category = input("Visualizar tarefas da categoria: ")
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            SELECT * FROM tasks WHERE category = ?
+        ''', (category,))
+
+        tasks = cursor.fetchall()
+
+        if not tasks:
+            print("Nenhuma tarefa encontrada nesta categoria.")
+        else:
+            for task in tasks:
+                print(task)
+
